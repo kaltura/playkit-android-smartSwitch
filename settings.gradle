@@ -1,0 +1,4 @@
+include ':smartswitchplugin'
+
+//include ':tvplayer'
+//project(':tvplayer').projectDir = new File(settingsDir, '../kaltura-player-android/tvplayer')
