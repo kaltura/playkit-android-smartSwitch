@@ -29,14 +29,12 @@ class CDNList {
 
 class SmartSwitchErrorResponse {
     var messages: ArrayList<ErrorResponseBody>? = null
-    // TODO
-    // var data: Array? = null
+    // var data: Array? = null //TODO
 }
 
 class ErrorResponseBody {
     var type: String? = null
     var code: String? = null
     var message: String? = null
-    // TODO
-    // var parameters: Array? = null
+    // var parameters: Array? = null //TODO
 }
