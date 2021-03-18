@@ -1,11 +1,11 @@
-package com.kaltura.playkit.plugins.smartswitch
+package com.kaltura.playkit.plugins.smartswitchplugin
 
 import android.net.Uri
 import androidx.annotation.Nullable
 import com.google.gson.Gson
 import com.kaltura.playkit.PKLog
-import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchErrorResponse
-import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchParser
+import com.kaltura.playkit.plugins.smartswitchplugin.pluginconfig.SmartSwitchErrorResponse
+import com.kaltura.playkit.plugins.smartswitchplugin.pluginconfig.SmartSwitchParser
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream

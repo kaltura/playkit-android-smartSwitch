@@ -1,4 +1,4 @@
-package com.kaltura.playkit.plugins.smartswitch
+package com.kaltura.playkit.plugins.smartswitchplugin
 
 import com.kaltura.playkit.PKEvent
 

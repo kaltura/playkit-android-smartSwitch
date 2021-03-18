@@ -1,4 +1,4 @@
-package com.kaltura.playkit.plugins.smartswitch.pluginconfig;
+package com.kaltura.playkit.plugins.smartswitchplugin.pluginconfig;
 
 import androidx.annotation.Nullable;
 

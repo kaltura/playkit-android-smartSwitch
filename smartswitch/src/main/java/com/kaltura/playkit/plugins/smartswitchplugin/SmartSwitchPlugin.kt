@@ -1,9 +1,9 @@
-package com.kaltura.playkit.plugins.smartswitch
+package com.kaltura.playkit.plugins.smartswitchplugin
 
 import android.content.Context
 import android.text.TextUtils
 import com.kaltura.playkit.*
-import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchConfig
+import com.kaltura.playkit.plugins.smartswitchplugin.pluginconfig.SmartSwitchConfig
 import com.kaltura.tvplayer.PKMediaEntryInterceptor
 import java.util.concurrent.Future
 
