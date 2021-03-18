@@ -2,9 +2,16 @@ package com.kaltura.playkit.plugins.smartswitch
 
 import android.net.Uri
 import androidx.annotation.Nullable
+import com.google.gson.Gson
+import com.kaltura.playkit.PKLog
+import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchErrorResponse
+import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchParser
+import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
+import java.net.MalformedURLException
 import java.net.URL
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
@@ -16,16 +23,18 @@ internal class YouboraSmartSwitchExecutor {
     private val smartSwitchUrl = "http://cdnbalancer.youbora.com/orderedcdn"
     private val smartSwitchExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
-    fun sendRequestToYoubora(accountCode: String, originCode: String, resource: String, @Nullable optionalParams: HashMap<String, String>?): Future<String> {
-        val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, accountCode, originCode, resource, optionalParams)
+    fun sendRequestToYoubora(accountCode: String, originCode: String, resourceUrl: String?, @Nullable optionalParams: HashMap<String, String>?): Future<Pair<String, String>?>? {
+        val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, accountCode, originCode, resourceUrl, optionalParams)
         return smartSwitchExecutor.submit(sendConfigToYoubora)
     }
 
     private class SendConfigToYoubora(val smartSwitchUrl: String,
                                       val accountCode: String,
                                       val originCode: String,
-                                      val resource: String,
-                                      val optionalParams: HashMap<String, String>?): Callable<String> {
+                                      var resourceUrl: String?,
+                                      val optionalParams: HashMap<String, String>?): Callable<Pair<String, String>?> {
+
+        private val log: PKLog = PKLog.get("YouboraSmartSwitchExecutor")
 
         private val connectionReadTimeOut: Int = 120000
         private val connectionTimeOut: Int = 120000
@@ -35,43 +44,66 @@ internal class YouboraSmartSwitchExecutor {
         private val resourceKey = "resource"
         private val originCodeKey = "originCode"
 
-        override fun call(): String {
+        override fun call(): Pair<String, String> {
             var connection: HttpURLConnection? = null
-            var inputStream: InputStream? = null
-
+            val inputStream: InputStream?
+            var smartSwitchUri: Uri
             try {
-                var smartSwitchUri: Uri  = Uri.parse(smartSwitchUrl)
+                smartSwitchUri  = Uri.parse(smartSwitchUrl)
                 smartSwitchUri = appendQueryParams(smartSwitchUri)
                 val url = URL(smartSwitchUri.toString())
-
+                log.d("formatted URL: ${url}")
                 connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = requestMethod
                 connection.readTimeout = connectionReadTimeOut
                 connection.connectTimeout = connectionTimeOut
-                connection.requestMethod = requestMethod
+                connection.setRequestProperty("Content-Type", "application/json")
                 connection.doInput = true
                 connection.connect()
 
                 if (connection.responseCode == successResponseCode) {
-                   // inputStream = connection.inputStream
-                } else {
-                //    log.e("Error downloading the image. Response code = " + connection.responseMessage)
+                    inputStream = connection.inputStream
+                    val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+                    val stringBuilder = StringBuilder()
+                    var incomingData: String?
+                    while (bufferedReader.readLine().also { incomingData = it } != null) {
+                        stringBuilder.append(incomingData)
+                    }
+                    bufferedReader.close()
+                    inputStream.close()
+                    log.d("SmartSwitch Response: ${stringBuilder}")
+                    val smartSwitchParser: SmartSwitchParser? = Gson().fromJson(stringBuilder.toString(), SmartSwitchParser::class.java)
+                    if (smartSwitchParser?.smartSwitch != null) {
+                        resourceUrl = parseSmartSwitchResponse(smartSwitchParser, resourceUrl)
+                    } else {
+                        var message = "Invalid Response"
+                        val smartSwitchError: SmartSwitchErrorResponse? = Gson().fromJson(stringBuilder.toString(), SmartSwitchErrorResponse::class.java)
+                        smartSwitchError?.let {
+                            it.messages?.get(0)?.message?.let { errorMessage ->
+                                message = errorMessage
+                            }
+                        }
+                        return Pair(resourceUrl!!, message)
+                    }
                 }
+            } catch (malformedUrlException: MalformedURLException) {
+                log.d("SmartSwitch MalformedURLException: ${malformedUrlException.message}")
             } catch (exception: IOException) {
-                // log.e(exception.toString())
+                log.d("SmartSwitch IOException: ${exception.message}")
             } finally {
                 connection?.disconnect()
             }
 
-            return "TEST"
+            return Pair(resourceUrl!!, "")
         }
 
         /**
-         * Add the incoming query params.
+         * Add the Incoming query params.
          */
         private fun appendQueryParams(uri: Uri): Uri {
             val builder: Uri.Builder = uri.buildUpon()
             builder.appendQueryParameter(accountCodeKey, accountCode)
-            builder.appendQueryParameter(resourceKey, resource)
+            builder.appendQueryParameter(resourceKey, resourceUrl)
             builder.appendQueryParameter(originCodeKey, originCode)
 
             optionalParams?.let { it ->
@@ -84,56 +116,27 @@ internal class YouboraSmartSwitchExecutor {
 
             return builder.build()
         }
+
+        /**
+         * Parse the SmartSwitch API response
+         */
+        private fun parseSmartSwitchResponse(smartSwitchParser: SmartSwitchParser?, resourceUrl: String?): String? {
+            var url = resourceUrl
+            smartSwitchParser?.let { it ->
+                it.smartSwitch?.let { smartSwitch ->
+                    smartSwitch.CDNList?.let { cdnList ->
+                        if (cdnList.isNotEmpty()) {
+                            cdnList[0].forEach { (_, value) ->
+                                value?.URL.also {
+                                    url = it
+                                    return@forEach
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return url
+        }
     }
-
-    //TODO: FIX ME
-    /*var test: String = "{\n" +
-              "   \"smartSwitch\":{\n" +
-              "      \"switchingMethod\":\"optimized\",\n" +
-              "      \"CDNList\":[\n" +
-              "         {\n" +
-              "            \"1\":{\n" +
-              "               \"CDN_NAME\":\"Akamai\",\n" +
-              "               \"CDN_CODE\":\"AKAMAI\",\n" +
-              "               \"URL\":\"http://live123438.ak.com/livechannel/master.m3u8\",\n" +
-              "               \"CDN_SCORE\":0.9408753455914173\n" +
-              "            }\n" +
-              "         },\n" +
-              "         {\n" +
-              "            \"2\":{\n" +
-              "               \"CDN_NAME\":\"CenturyLink\",\n" +
-              "               \"CDN_CODE\":\"LEVEL3\",\n" +
-              "               \"URL\":\"http://l3.live.com/434783dhsjkfhe1327/streamers/l1/master.m3u8\",\n" +
-              "               \"CDN_SCORE\":0.9138440135931004\n" +
-              "            }\n" +
-              "         },\n" +
-              "         {\n" +
-              "            \"3\":{\n" +
-              "               \"CDN_NAME\":\"Fastly\",\n" +
-              "               \"CDN_CODE\":\"FASTLY\",\n" +
-              "               \"URL\":\"http://fast.ly/l1/broadpeak123/livestreamer/master.m3u8\",\n" +
-              "               \"CDN_SCORE\":0.7305910419102666\n" +
-              "            }\n" +
-              "         }\n" +
-              "      ],\n" +
-              "      \"UUID\":\"cf5803d4-1fbe-447e-9b35-a826bb6da1ec\"\n" +
-              "   }\n" +
-              "}"
-
-      var gson: SmartSwitchParser = Gson().fromJson(test, SmartSwitchParser::class.java)
-
-    var errorBody = "{\n" +
-            "\n" +
-            "    \"messages\": [\n" +
-            "        {\n" +
-            "            \"type\": \"ERROR\",\n" +
-            "            \"code\": \"3001\",\n" +
-            "            \"message\": \"Configuration not found.\",\n" +
-            "            \"parameters\": [ ]\n" +
-            "        }\n" +
-            "    ],\n" +
-            "    \"data\": [ ]\n" +
-            "\n" +
-            "}"
-    var gson: SmartSwitchErrorResponse = Gson().fromJson(errorBody, SmartSwitchErrorResponse::class.java)*/
 }
