@@ -8,7 +8,7 @@ import com.kaltura.tvplayer.PKMediaEntryInterceptor
 import java.util.concurrent.Future
 
 class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
-    private val log = PKLog.get("SmartSwitchPlugin")
+    private val log = PKLog.get(SmartSwitchPlugin::class.java.simpleName)
     private var messageBus: MessageBus? = null
 
     private var accountCode: String? = null
@@ -44,8 +44,8 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
             source?.let { mediaSource ->
                 val sourceUrl = mediaSource.url
                 if (!TextUtils.isEmpty(sourceUrl)) {
-                    val youboraSmartSwitchExecutor = YouboraSmartSwitchExecutor()
-                    val sendRequestToYoubora: Future<Pair<String, String>?>? = youboraSmartSwitchExecutor.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams)
+                    val smartSwitchExecutor = SmartSwitchExecutor()
+                    val sendRequestToYoubora: Future<Pair<String, String>?>? = smartSwitchExecutor.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams)
                     val responsePair = sendRequestToYoubora?.get() as Pair
                     val isErrorResponse = responsePair.second
                     val url = responsePair.first

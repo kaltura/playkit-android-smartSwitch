@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
-internal class YouboraSmartSwitchExecutor {
+internal class SmartSwitchExecutor {
 
     private val smartSwitchUrl = "http://cdnbalancer.youbora.com/orderedcdn"
     private val smartSwitchExecutor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -28,13 +28,18 @@ internal class YouboraSmartSwitchExecutor {
         return smartSwitchExecutor.submit(sendConfigToYoubora)
     }
 
+    /**
+     * Callable which is handling the Network request to CDN Balancer
+     * Does the parsing of the response
+     * Sends the callback as well
+     */
     private class SendConfigToYoubora(val smartSwitchUrl: String,
                                       val accountCode: String,
                                       val originCode: String,
                                       var resourceUrl: String?,
                                       val optionalParams: HashMap<String, String>?): Callable<Pair<String, String>?> {
 
-        private val log: PKLog = PKLog.get("YouboraSmartSwitchExecutor")
+        private val log: PKLog = PKLog.get("SmartSwitchExecutor")
 
         private val connectionReadTimeOut: Int = 120000
         private val connectionTimeOut: Int = 120000
@@ -43,6 +48,7 @@ internal class YouboraSmartSwitchExecutor {
         private val accountCodeKey = "accountCode"
         private val resourceKey = "resource"
         private val originCodeKey = "originCode"
+        private var errorMessage = "Invalid Response"
 
         override fun call(): Pair<String, String> {
             var connection: HttpURLConnection? = null
@@ -76,15 +82,19 @@ internal class YouboraSmartSwitchExecutor {
                     if (smartSwitchParser?.smartSwitch != null) {
                         resourceUrl = parseSmartSwitchResponse(smartSwitchParser, resourceUrl)
                     } else {
-                        var message = "Invalid Response"
                         val smartSwitchError: SmartSwitchErrorResponse? = Gson().fromJson(stringBuilder.toString(), SmartSwitchErrorResponse::class.java)
                         smartSwitchError?.let {
-                            it.messages?.get(0)?.message?.let { errorMessage ->
-                                message = errorMessage
+                            it.messages?.get(0)?.message?.let { message ->
+                                errorMessage = message
                             }
                         }
-                        return Pair(resourceUrl!!, message)
+                        return Pair(resourceUrl!!, errorMessage)
                     }
+                } else {
+                    errorMessage = connection.responseMessage
+                    log.d("connection.responseMessage: ${errorMessage}")
+                    log.d("connection.responseCode: ${connection.responseCode}")
+                    return Pair(resourceUrl!!, errorMessage)
                 }
             } catch (malformedUrlException: MalformedURLException) {
                 log.d("SmartSwitch MalformedURLException: ${malformedUrlException.message}")

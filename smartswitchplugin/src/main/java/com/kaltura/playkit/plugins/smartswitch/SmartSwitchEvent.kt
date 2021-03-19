@@ -5,7 +5,6 @@ import com.kaltura.playkit.PKEvent
 open class SmartSwitchEvent(type: Type?): PKEvent {
 
     var type: Type? = null
-    var error = ErrorEvent::class.java
 
     init {
         this.type = type
@@ -19,5 +18,9 @@ open class SmartSwitchEvent(type: Type?): PKEvent {
 
     override fun eventType(): Enum<*>? {
         return type
+    }
+
+    companion object {
+        var error = ErrorEvent::class.java
     }
 }
