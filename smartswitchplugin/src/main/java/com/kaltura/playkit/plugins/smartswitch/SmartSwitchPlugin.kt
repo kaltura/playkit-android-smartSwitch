@@ -17,8 +17,8 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
 
     override fun onLoad(player: Player?, config: Any?, messageBus: MessageBus?, context: Context?) {
         if (config == null) {
-            log.e("SmartSwitch config is missing");
-            return;
+            log.e("SmartSwitch config is missing")
+            return
         }
 
         if (config is SmartSwitchConfig) {
@@ -92,6 +92,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
     }
 
     companion object {
+        @JvmField
         val factory: Factory = object : Factory {
             override fun getName(): String {
                 return "smartswitch"
