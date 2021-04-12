@@ -5,13 +5,16 @@ plugins {
 
 android {
     compileSdkVersion 30
-    buildToolsVersion "30.0.2"
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 30
         versionCode 1
-        versionName "1.0"
+        versionName libVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -22,10 +25,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
+
     kotlinOptions {
         jvmTarget = '1.8'
     }
@@ -37,6 +37,7 @@ dependencies {
     //implementation 'com.kaltura:playkit-android:dev-SNAPSHOT'
     //implementation project(":playkit")
 
+    //api 'com.kaltura:kaltura-player-android:develop-SNAPSHOT'
     //implementation 'com.kaltura.player:tvplayer:4.12.0'
     implementation project(':tvplayer')
 
@@ -56,4 +57,6 @@ repositories {
     maven { url "https://jitpack.io" }
 }
 
-apply from: './gradle-mvn-push.gradle'
+if (hasProperty('VERSION_NAME')) {
+    apply from: './gradle-mvn-push.gradle'
+}
