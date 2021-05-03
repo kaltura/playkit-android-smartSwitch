@@ -11,7 +11,7 @@ open class SmartSwitchEvent(type: Type?): PKEvent {
     }
 
     enum class Type {
-        ERROR
+        SMARTSITCH_ERROR
     }
 
     class ErrorEvent(errorType: Type?, val errorCode: Int, val errorMessage: String) : SmartSwitchEvent(errorType)

@@ -64,7 +64,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
 
         errorMessage?.let {
             messageBus?.post(SmartSwitchEvent.ErrorEvent(
-                    SmartSwitchEvent.Type.ERROR,
+                    SmartSwitchEvent.Type.SMARTSITCH_ERROR,
                     errorCode,
                     it))
         }
