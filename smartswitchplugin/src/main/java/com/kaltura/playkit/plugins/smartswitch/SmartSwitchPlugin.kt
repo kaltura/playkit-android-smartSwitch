@@ -34,7 +34,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
         val errorCode = -1
         var errorMessage: String? = null
 
-        if (mediaEntry == null && TextUtils.isEmpty(accountCode) && TextUtils.isEmpty(originCode)) {
+        if (mediaEntry == null && accountCode.isNullOrEmpty() && originCode.isNullOrEmpty()) {
             listener?.onComplete()
             return
         }
@@ -43,7 +43,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
             val source = mediaEntry.sources[0]
             source?.let { mediaSource ->
                 val sourceUrl = mediaSource.url
-                if (!TextUtils.isEmpty(sourceUrl)) {
+                if (!sourceUrl.isNullOrEmpty()) {
                     val smartSwitchExecutor = SmartSwitchExecutor()
                     val sendRequestToYoubora: Future<Pair<String, String>?>? = smartSwitchExecutor.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams)
                     val responsePair = sendRequestToYoubora?.get() as Pair
