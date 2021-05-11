@@ -28,6 +28,10 @@ internal class SmartSwitchExecutor {
         return smartSwitchExecutor.submit(sendConfigToYoubora)
     }
 
+    fun terminateService() {
+        smartSwitchExecutor.shutdownNow()
+    }
+
     /**
      * Callable which is handling the Network request to CDN Balancer
      * Does the parsing of the response
@@ -58,7 +62,7 @@ internal class SmartSwitchExecutor {
                 smartSwitchUri  = Uri.parse(smartSwitchUrl)
                 smartSwitchUri = appendQueryParams(smartSwitchUri)
                 val url = URL(smartSwitchUri.toString())
-                log.d("formatted URL: ${url}")
+                log.d("formatted URL: $url")
                 connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = requestMethod
                 connection.readTimeout = connectionReadTimeOut
@@ -92,7 +96,7 @@ internal class SmartSwitchExecutor {
                     }
                 } else {
                     errorMessage = connection.responseMessage
-                    log.d("connection.responseMessage: ${errorMessage}")
+                    log.d("connection.responseMessage: $errorMessage")
                     log.d("connection.responseCode: ${connection.responseCode}")
                     return Pair(resourceUrl!!, errorMessage)
                 }
@@ -119,7 +123,9 @@ internal class SmartSwitchExecutor {
             optionalParams?.let { it ->
                 if (it.isNotEmpty()) {
                     it.forEach { (queryKey, queryValue) ->
-                        builder.appendQueryParameter(queryKey, queryValue)
+                        if (!queryKey.isNullOrEmpty()) {
+                            builder.appendQueryParameter(queryKey, queryValue)
+                        }
                     }
                 }
             }
@@ -135,7 +141,7 @@ internal class SmartSwitchExecutor {
             smartSwitchParser?.let { it ->
                 it.smartSwitch?.let { smartSwitch ->
                     smartSwitch.CDNList?.let { cdnList ->
-                        if (cdnList.isNotEmpty()) {
+                        if (!cdnList.isNullOrEmpty()) {
                             cdnList[0].forEach { (_, value) ->
                                 value?.URL.also {
                                     url = it

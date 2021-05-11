@@ -54,6 +54,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                     } else {
                         errorMessage = isErrorResponse
                     }
+                    smartSwitchExecutor.terminateService()
                 } else {
                     errorMessage = "Invalid media source"
                 }
