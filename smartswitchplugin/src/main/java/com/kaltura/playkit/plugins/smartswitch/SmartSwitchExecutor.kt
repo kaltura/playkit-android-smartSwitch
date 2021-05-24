@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.annotation.Nullable
 import com.google.gson.Gson
 import com.kaltura.playkit.PKLog
+import com.kaltura.playkit.plugins.smartswitch.pluginconfig.CDNList
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchErrorResponse
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchParser
 import java.io.BufferedReader
@@ -20,10 +21,12 @@ import java.util.concurrent.Future
 
 internal class SmartSwitchExecutor {
 
-    private val smartSwitchUrl = "http://cdnbalancer.youbora.com/orderedcdn"
     private val smartSwitchExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
-    fun sendRequestToYoubora(accountCode: String, originCode: String, resourceUrl: String?, @Nullable optionalParams: HashMap<String, String>?): Future<Pair<String, String>?>? {
+    fun sendRequestToYoubora(accountCode: String, originCode: String,
+                             resourceUrl: String?,
+                             @Nullable optionalParams: HashMap<String, String>?,
+                             @Nullable smartSwitchUrl: String): Future<Pair<String, String>?>? {
         val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, accountCode, originCode, resourceUrl, optionalParams)
         return smartSwitchExecutor.submit(sendConfigToYoubora)
     }
@@ -37,7 +40,7 @@ internal class SmartSwitchExecutor {
      * Does the parsing of the response
      * Sends the callback as well
      */
-    private class SendConfigToYoubora(val smartSwitchUrl: String,
+    private class SendConfigToYoubora(val smartSwitchServerUrl: String,
                                       val accountCode: String,
                                       val originCode: String,
                                       var resourceUrl: String?,
@@ -45,8 +48,8 @@ internal class SmartSwitchExecutor {
 
         private val log: PKLog = PKLog.get("SmartSwitchExecutor")
 
-        private val connectionReadTimeOut: Int = 120000
-        private val connectionTimeOut: Int = 120000
+        private val connectionReadTimeOut: Int = 10000
+        private val connectionTimeOut: Int = 10000
         private val successResponseCode: Int = 200
         private val requestMethod: String = "GET"
         private val accountCodeKey = "accountCode"
@@ -59,7 +62,7 @@ internal class SmartSwitchExecutor {
             val inputStream: InputStream?
             var smartSwitchUri: Uri
             try {
-                smartSwitchUri  = Uri.parse(smartSwitchUrl)
+                smartSwitchUri  = Uri.parse(smartSwitchServerUrl)
                 smartSwitchUri = appendQueryParams(smartSwitchUri)
                 val url = URL(smartSwitchUri.toString())
                 log.d("formatted URL: $url")
@@ -84,7 +87,15 @@ internal class SmartSwitchExecutor {
                     log.d("SmartSwitch Response: ${stringBuilder}")
                     val smartSwitchParser: SmartSwitchParser? = Gson().fromJson(stringBuilder.toString(), SmartSwitchParser::class.java)
                     if (smartSwitchParser?.smartSwitch != null) {
-                        resourceUrl = parseSmartSwitchResponse(smartSwitchParser, resourceUrl)
+                        val cdnList: CDNList? = parseSmartSwitchResponse(smartSwitchParser)
+                        if (cdnList != null) {
+                            resourceUrl = cdnList.URL
+                            log.d("Success response CDN URL: ${cdnList.URL} CDN NAME: ${cdnList.CDN_NAME}")
+                            log.d("Success response CDN CODE: ${cdnList.CDN_CODE} CDN SCORE: ${cdnList.CDN_SCORE}")
+                        } else {
+                            errorMessage = "CDNList is empty"
+                            return error(resourceUrl, errorMessage)
+                        }
                     } else {
                         val smartSwitchError: SmartSwitchErrorResponse? = Gson().fromJson(stringBuilder.toString(), SmartSwitchErrorResponse::class.java)
                         smartSwitchError?.let {
@@ -144,23 +155,22 @@ internal class SmartSwitchExecutor {
         /**
          * Parse the SmartSwitch API response
          */
-        private fun parseSmartSwitchResponse(smartSwitchParser: SmartSwitchParser?, resourceUrl: String?): String? {
-            var url = resourceUrl
+        private fun parseSmartSwitchResponse(smartSwitchParser: SmartSwitchParser?): CDNList? {
+            var listOfCdn: CDNList? = null
             smartSwitchParser?.let { it ->
                 it.smartSwitch?.let { smartSwitch ->
                     smartSwitch.CDNList?.let { cdnList ->
                         if (!cdnList.isNullOrEmpty()) {
                             cdnList[0].forEach { (_, value) ->
-                                value?.URL.also {
-                                    url = it
-                                    return@forEach
+                                value?.let {
+                                    listOfCdn = value
                                 }
                             }
                         }
                     }
                 }
             }
-            return url
+            return listOfCdn
         }
 
         private fun error(url: String?, errorMessage: String): Pair<String, String> {

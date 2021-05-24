@@ -1,7 +1,6 @@
 package com.kaltura.playkit.plugins.smartswitch
 
 import android.content.Context
-import android.text.TextUtils
 import com.kaltura.playkit.*
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchConfig
 import com.kaltura.tvplayer.PKMediaEntryInterceptor
@@ -14,6 +13,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
     private var accountCode: String? = null
     private var originCode: String? = null
     private var optionalParams: HashMap<String, String>? = null
+    private var smartSwitchUrl: String? = null
     private var smartSwitchExecutor: SmartSwitchExecutor? = null
 
     override fun onLoad(player: Player?, config: Any?, messageBus: MessageBus?, context: Context?) {
@@ -25,6 +25,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
         this.accountCode = config.accountCode
         this.originCode = config.originCode
         this.optionalParams = config.optionalParams
+        this.smartSwitchUrl = config.smartSwitchUrl
 
         this.messageBus = messageBus
     }
@@ -44,7 +45,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                 val sourceUrl = mediaSource.url
                 if (!sourceUrl.isNullOrEmpty()) {
                     smartSwitchExecutor = SmartSwitchExecutor()
-                    val sendRequestToYoubora: Future<Pair<String, String>?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams)
+                    val sendRequestToYoubora: Future<Pair<String, String>?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
                     val responsePair = sendRequestToYoubora?.get() as Pair
                     val isErrorResponse = responsePair.second
                     val url = responsePair.first
