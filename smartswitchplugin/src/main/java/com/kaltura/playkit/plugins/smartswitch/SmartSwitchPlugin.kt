@@ -14,18 +14,17 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
     private var accountCode: String? = null
     private var originCode: String? = null
     private var optionalParams: HashMap<String, String>? = null
+    private var smartSwitchExecutor: SmartSwitchExecutor? = null
 
     override fun onLoad(player: Player?, config: Any?, messageBus: MessageBus?, context: Context?) {
-        if (config == null) {
+        if (config == null || config !is SmartSwitchConfig) {
             log.e("SmartSwitch config is missing")
             return
         }
 
-        if (config is SmartSwitchConfig) {
-            this.accountCode = config.accountCode
-            this.originCode = config.originCode
-            this.optionalParams = config.optionalParams
-        }
+        this.accountCode = config.accountCode
+        this.originCode = config.originCode
+        this.optionalParams = config.optionalParams
 
         this.messageBus = messageBus
     }
@@ -44,8 +43,8 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
             source?.let { mediaSource ->
                 val sourceUrl = mediaSource.url
                 if (!sourceUrl.isNullOrEmpty()) {
-                    val smartSwitchExecutor = SmartSwitchExecutor()
-                    val sendRequestToYoubora: Future<Pair<String, String>?>? = smartSwitchExecutor.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams)
+                    smartSwitchExecutor = SmartSwitchExecutor()
+                    val sendRequestToYoubora: Future<Pair<String, String>?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams)
                     val responsePair = sendRequestToYoubora?.get() as Pair
                     val isErrorResponse = responsePair.second
                     val url = responsePair.first
@@ -54,7 +53,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                     } else {
                         errorMessage = isErrorResponse
                     }
-                    smartSwitchExecutor.terminateService()
+                    smartSwitchExecutor?.terminateService()
                 } else {
                     errorMessage = "Invalid media source"
                 }
@@ -89,6 +88,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
     }
 
     override fun onDestroy() {
+        smartSwitchExecutor?.terminateService()
         messageBus?.removeListeners(this)
     }
 
