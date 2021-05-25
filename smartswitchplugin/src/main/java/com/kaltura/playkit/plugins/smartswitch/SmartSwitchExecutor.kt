@@ -62,7 +62,7 @@ internal class SmartSwitchExecutor {
             val inputStream: InputStream?
             var smartSwitchUri: Uri
             try {
-                smartSwitchUri  = Uri.parse(smartSwitchServerUrl)
+                smartSwitchUri = Uri.parse(smartSwitchServerUrl)
                 smartSwitchUri = appendQueryParams(smartSwitchUri)
                 val url = URL(smartSwitchUri.toString())
                 log.d("formatted URL: $url")
