@@ -59,11 +59,11 @@ internal class SmartSwitchExecutor {
 
         override fun call(): Pair<String, String> {
             var connection: HttpURLConnection? = null
-            val inputStream: InputStream?
-            var smartSwitchUri: Uri
+            var inputStream: InputStream? = null
+            var bufferedReader: BufferedReader? = null
+            val smartSwitchUri: Uri
             try {
-                smartSwitchUri = Uri.parse(smartSwitchServerUrl)
-                smartSwitchUri = appendQueryParams(smartSwitchUri)
+                smartSwitchUri = appendQueryParams(Uri.parse(smartSwitchServerUrl))
                 val url = URL(smartSwitchUri.toString())
                 log.d("formatted URL: $url")
                 connection = url.openConnection() as HttpURLConnection
@@ -76,14 +76,12 @@ internal class SmartSwitchExecutor {
 
                 if (connection.responseCode == successResponseCode) {
                     inputStream = connection.inputStream
-                    val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+                    bufferedReader = BufferedReader(InputStreamReader(inputStream))
                     val stringBuilder = StringBuilder()
                     var incomingData: String?
                     while (bufferedReader.readLine().also { incomingData = it } != null) {
                         stringBuilder.append(incomingData)
                     }
-                    bufferedReader.close()
-                    inputStream.close()
                     log.d("SmartSwitch Response: ${stringBuilder}")
                     val smartSwitchParser: SmartSwitchParser? = Gson().fromJson(stringBuilder.toString(), SmartSwitchParser::class.java)
                     if (smartSwitchParser?.smartSwitch != null) {
@@ -124,7 +122,10 @@ internal class SmartSwitchExecutor {
                 }
                 return error(resourceUrl, errorMessage)
             } finally {
+                bufferedReader?.close()
+                inputStream?.close()
                 connection?.disconnect()
+                log.d("Connection resources has been cleaned.")
             }
 
             return Pair(resourceUrl!!, "")
