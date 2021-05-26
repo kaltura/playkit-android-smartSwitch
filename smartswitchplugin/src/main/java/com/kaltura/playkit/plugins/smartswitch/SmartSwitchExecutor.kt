@@ -26,7 +26,7 @@ internal class SmartSwitchExecutor {
     fun sendRequestToYoubora(accountCode: String, originCode: String,
                              resourceUrl: String?,
                              @Nullable optionalParams: HashMap<String, String>?,
-                             @Nullable smartSwitchUrl: String): Future<Pair<String, String>?>? {
+                             @Nullable smartSwitchUrl: String): Future<Pair<String, String?>?>? {
         val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, accountCode, originCode, resourceUrl, optionalParams)
         return smartSwitchExecutor.submit(sendConfigToYoubora)
     }
@@ -44,7 +44,7 @@ internal class SmartSwitchExecutor {
                                       val accountCode: String,
                                       val originCode: String,
                                       var resourceUrl: String?,
-                                      val optionalParams: HashMap<String, String>?): Callable<Pair<String, String>?> {
+                                      val optionalParams: HashMap<String, String>?): Callable<Pair<String, String?>?> {
 
         private val log: PKLog = PKLog.get("SmartSwitchExecutor")
 
@@ -57,7 +57,7 @@ internal class SmartSwitchExecutor {
         private val originCodeKey = "originCode"
         private var errorMessage = "Invalid Response"
 
-        override fun call(): Pair<String, String> {
+        override fun call(): Pair<String, String?> {
             var connection: HttpURLConnection? = null
             var inputStream: InputStream? = null
             var bufferedReader: BufferedReader? = null
@@ -88,8 +88,8 @@ internal class SmartSwitchExecutor {
                         val cdnList: CDNList? = parseSmartSwitchResponse(smartSwitchParser)
                         if (cdnList != null) {
                             resourceUrl = cdnList.URL
-                            log.d("Success response CDN URL: ${cdnList.URL} CDN NAME: ${cdnList.CDN_NAME}")
-                            log.d("Success response CDN CODE: ${cdnList.CDN_CODE} CDN SCORE: ${cdnList.CDN_SCORE}")
+                            log.d("Success response CDN_URL: ${cdnList.URL} CDN_NAME: ${cdnList.CDN_NAME}")
+                            log.d("Success response CDN_CODE: ${cdnList.CDN_CODE} CDN_SCORE: ${cdnList.CDN_SCORE}")
                         } else {
                             errorMessage = "CDNList is empty"
                             return error(resourceUrl, errorMessage)
@@ -97,8 +97,14 @@ internal class SmartSwitchExecutor {
                     } else {
                         val smartSwitchError: SmartSwitchErrorResponse? = Gson().fromJson(stringBuilder.toString(), SmartSwitchErrorResponse::class.java)
                         smartSwitchError?.let {
-                            it.messages?.get(0)?.message?.let { message ->
-                                errorMessage = message
+                            it.messages?.size?.let { messageSize ->
+                                if (messageSize > 0) {
+                                    it.messages?.get(0)?.message?.let { message ->
+                                        if (message.isNotEmpty()) {
+                                            errorMessage = message
+                                        }
+                                    }
+                                }
                             }
                         }
                         return error(resourceUrl, errorMessage)
@@ -128,7 +134,7 @@ internal class SmartSwitchExecutor {
                 log.d("Connection resources has been cleaned.")
             }
 
-            return Pair(resourceUrl!!, "")
+            return Pair(resourceUrl!!, null)
         }
 
         /**

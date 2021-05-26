@@ -45,11 +45,11 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                 val sourceUrl = mediaSource.url
                 if (!sourceUrl.isNullOrEmpty()) {
                     smartSwitchExecutor = SmartSwitchExecutor()
-                    val sendRequestToYoubora: Future<Pair<String, String>?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
+                    val sendRequestToYoubora: Future<Pair<String, String?>?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
                     val responsePair = sendRequestToYoubora?.get() as Pair
                     val isErrorResponse = responsePair.second
                     val url = responsePair.first
-                    if (isErrorResponse.isEmpty()) {
+                    if (isErrorResponse == null) {
                         mediaSource.url = url
                     } else {
                         errorMessage = isErrorResponse
