@@ -1,0 +1,19 @@
+include ':smartswitchplugin'
+
+//include ':tvplayer'
+//project(':tvplayer').projectDir = new File(settingsDir, '../kaltura-player-android/tvplayer')
+//
+//include ':playkit'
+//project(':playkit').projectDir = new File('../playkit-android/playkit')
+//
+//include ':providers'
+//project(':providers').projectDir = new File('../playkit-android-providers/mediaproviders')
+//
+//include ':youbora'
+//project(':youbora').projectDir = new File('../playkit-android-youbora/youboraplugin')
+//
+//include ':kava'
+//project(':kava').projectDir = new File('../playkit-android-kava/kavaplugin')
+//
+//include ':dtglib'
+//project(':dtglib').projectDir = new File(settingsDir, '../playkit-dtg-android/dtglib')
