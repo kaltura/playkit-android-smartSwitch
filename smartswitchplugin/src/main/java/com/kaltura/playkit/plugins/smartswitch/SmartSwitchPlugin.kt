@@ -112,4 +112,3 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
         }
     }
 }
-
