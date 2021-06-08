@@ -111,18 +111,18 @@ internal class SmartSwitchExecutor {
                     }
                 } else {
                     errorMessage = connection.responseMessage
-                    log.d("connection.responseMessage: $errorMessage")
-                    log.d("connection.responseCode: ${connection.responseCode}")
+                    log.e("connection.responseMessage: $errorMessage")
+                    log.e("connection.responseCode: ${connection.responseCode}")
                     return error(resourceUrl, errorMessage)
                 }
             } catch (malformedUrlException: MalformedURLException) {
-                log.d("SmartSwitch MalformedURLException: ${malformedUrlException.message}")
+                log.e("SmartSwitch MalformedURLException: ${malformedUrlException.message}")
                 malformedUrlException.message?.let {
                     errorMessage = "SmartSwitch MalformedURLException: $it"
                 }
                 return error(resourceUrl, errorMessage)
             } catch (exception: IOException) {
-                log.d("SmartSwitch IOException: ${exception.message}")
+                log.e("SmartSwitch IOException: ${exception.message}")
                 exception.message?.let {
                     errorMessage = "SmartSwitch IOException: $it"
                 }
