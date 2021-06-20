@@ -8,6 +8,7 @@ Kaltura Player plugin for NPAW Smart Switch
 
 This plugin can be used via KalturaPlayer Only and the following plugin configuration shoud be used:
 
+```
 data class SmartSwitchConfig @JvmOverloads constructor(@NonNull val accountCode: String? = null,
                                                        @NonNull val originCode: String? = null,
                                                        val optionalParams: HashMap<String, String>? = null,
@@ -18,4 +19,5 @@ data class SmartSwitchConfig @JvmOverloads constructor(@NonNull val accountCode:
         }
     }
 }
+```
 
