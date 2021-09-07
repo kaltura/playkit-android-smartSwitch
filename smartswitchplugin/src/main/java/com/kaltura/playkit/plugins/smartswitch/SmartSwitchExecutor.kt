@@ -23,10 +23,11 @@ internal class SmartSwitchExecutor {
 
     private val smartSwitchExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
+    @Nullable
     fun sendRequestToYoubora(accountCode: String, originCode: String,
                              resourceUrl: String?,
                              @Nullable optionalParams: HashMap<String, String>?,
-                             @Nullable smartSwitchUrl: String): Future<Pair<String, String?>?>? {
+                             @Nullable smartSwitchUrl: String): Future<Any?>? {
         val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, accountCode, originCode, resourceUrl, optionalParams)
         return smartSwitchExecutor.submit(sendConfigToYoubora)
     }
@@ -44,7 +45,7 @@ internal class SmartSwitchExecutor {
                                       val accountCode: String,
                                       val originCode: String,
                                       var resourceUrl: String?,
-                                      val optionalParams: HashMap<String, String>?): Callable<Pair<String, String?>?> {
+                                      val optionalParams: HashMap<String, String>?): Callable<Any?> {
 
         private val log: PKLog = PKLog.get("SmartSwitchExecutor")
 
@@ -56,8 +57,9 @@ internal class SmartSwitchExecutor {
         private val resourceKey = "resource"
         private val originCodeKey = "originCode"
         private var errorMessage = "Invalid Response"
+        private var cdnList: CDNList? = null
 
-        override fun call(): Pair<String, String?> {
+        override fun call(): Any {
             var connection: HttpURLConnection? = null
             var inputStream: InputStream? = null
             var bufferedReader: BufferedReader? = null
@@ -85,14 +87,13 @@ internal class SmartSwitchExecutor {
                     log.d("SmartSwitch Response: ${stringBuilder}")
                     val smartSwitchParser: SmartSwitchParser? = Gson().fromJson(stringBuilder.toString(), SmartSwitchParser::class.java)
                     if (smartSwitchParser?.smartSwitch != null) {
-                        val cdnList: CDNList? = parseSmartSwitchResponse(smartSwitchParser)
+                        cdnList = parseSmartSwitchResponse(smartSwitchParser)
                         if (cdnList != null) {
-                            resourceUrl = cdnList.URL
-                            log.d("Success response CDN_URL: ${cdnList.URL} CDN_NAME: ${cdnList.CDN_NAME}")
-                            log.d("Success response CDN_CODE: ${cdnList.CDN_CODE} CDN_SCORE: ${cdnList.CDN_SCORE}")
+                            log.d("Success response CDN_URL: ${cdnList!!.URL} CDN_NAME: ${cdnList!!.CDN_NAME}")
+                            log.d("Success response CDN_CODE: ${cdnList!!.CDN_CODE} CDN_SCORE: ${cdnList!!.CDN_SCORE}")
                         } else {
                             errorMessage = "CDNList is empty"
-                            return error(resourceUrl, errorMessage)
+                            return errorMessage
                         }
                     } else {
                         val smartSwitchError: SmartSwitchErrorResponse? = Gson().fromJson(stringBuilder.toString(), SmartSwitchErrorResponse::class.java)
@@ -107,34 +108,34 @@ internal class SmartSwitchExecutor {
                                 }
                             }
                         }
-                        return error(resourceUrl, errorMessage)
+                        return errorMessage
                     }
                 } else {
                     errorMessage = connection.responseMessage
                     log.e("connection.responseMessage: $errorMessage")
                     log.e("connection.responseCode: ${connection.responseCode}")
-                    return error(resourceUrl, errorMessage)
+                    return errorMessage
                 }
             } catch (malformedUrlException: MalformedURLException) {
                 log.e("SmartSwitch MalformedURLException: ${malformedUrlException.message}")
                 malformedUrlException.message?.let {
                     errorMessage = "SmartSwitch MalformedURLException: $it"
                 }
-                return error(resourceUrl, errorMessage)
+                return errorMessage
             } catch (exception: IOException) {
                 log.e("SmartSwitch IOException: ${exception.message}")
                 exception.message?.let {
                     errorMessage = "SmartSwitch IOException: $it"
                 }
-                return error(resourceUrl, errorMessage)
+                return errorMessage
             } finally {
                 bufferedReader?.close()
                 inputStream?.close()
                 connection?.disconnect()
-                log.d("Connection resources has been cleaned.")
+                log.d("Connection resources have been cleaned.")
             }
 
-            return Pair(resourceUrl!!, null)
+            return cdnList!!
         }
 
         /**
@@ -178,10 +179,6 @@ internal class SmartSwitchExecutor {
                 }
             }
             return listOfCdn
-        }
-
-        private fun error(url: String?, errorMessage: String): Pair<String, String> {
-            return Pair(url!!, errorMessage)
         }
     }
 }
