@@ -1,6 +1,7 @@
 package com.kaltura.playkit.plugins.smartswitch.pluginconfig
 
 import androidx.annotation.Nullable
+import com.google.gson.annotations.SerializedName
 
 class SmartSwitchParser {
     @Nullable
@@ -18,13 +19,17 @@ class SmartSwitch {
 
 class CDNList {
     @Nullable
-    var CDN_NAME: String? = null
+    @SerializedName("CDN_NAME")
+    var cdnName: String? = null
     @Nullable
-    var CDN_CODE: String? = null
+    @SerializedName("CDN_CODE")
+    var cdnCode: String? = null
     @Nullable
-    var URL: String? = null
+    @SerializedName("URL")
+    var url: String? = null
     @Nullable
-    var CDN_SCORE: Float? = null
+    @SerializedName("CDN_SCORE")
+    var cdnScore: Float? = null
 }
 
 class SmartSwitchErrorResponse {

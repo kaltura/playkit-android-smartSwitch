@@ -89,8 +89,8 @@ internal class SmartSwitchExecutor {
                     if (smartSwitchParser?.smartSwitch != null) {
                         cdnList = parseSmartSwitchResponse(smartSwitchParser)
                         if (cdnList != null) {
-                            log.d("Success response CDN_URL: ${cdnList!!.URL} CDN_NAME: ${cdnList!!.CDN_NAME}")
-                            log.d("Success response CDN_CODE: ${cdnList!!.CDN_CODE} CDN_SCORE: ${cdnList!!.CDN_SCORE}")
+                            log.d("Success response CDN_URL: ${cdnList!!.url} CDN_NAME: ${cdnList!!.cdnName}")
+                            log.d("Success response CDN_CODE: ${cdnList!!.cdnCode} CDN_SCORE: ${cdnList!!.cdnScore}")
                         } else {
                             errorMessage = "CDNList is empty"
                             return errorMessage

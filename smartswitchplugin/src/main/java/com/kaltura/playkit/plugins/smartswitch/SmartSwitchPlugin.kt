@@ -51,10 +51,10 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                     response?.let { res ->
                         when (res) {
                             is CDNList -> {
-                                mediaSource.url = res.URL
+                                mediaSource.url = res.url
                                 messageBus?.post(InterceptorEvent.CdnSwitchedEvent(
                                     InterceptorEvent.Type.CDN_SWITCHED,
-                                    res.CDN_CODE))
+                                    res.cdnCode))
                             }
                             is String -> {
                                 errorMessage = res
