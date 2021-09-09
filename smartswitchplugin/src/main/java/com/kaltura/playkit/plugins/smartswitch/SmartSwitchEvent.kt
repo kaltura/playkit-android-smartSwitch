@@ -21,6 +21,7 @@ open class SmartSwitchEvent(type: Type?): PKEvent {
     }
 
     companion object {
+        @JvmField
         var error = ErrorEvent::class.java
     }
 }
