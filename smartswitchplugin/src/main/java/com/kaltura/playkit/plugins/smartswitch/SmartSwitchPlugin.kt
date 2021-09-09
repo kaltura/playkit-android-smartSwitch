@@ -2,6 +2,7 @@ package com.kaltura.playkit.plugins.smartswitch
 
 import android.content.Context
 import com.kaltura.playkit.*
+import com.kaltura.playkit.plugins.smartswitch.pluginconfig.CDNList
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchConfig
 import com.kaltura.tvplayer.PKMediaEntryInterceptor
 import java.util.concurrent.Future
@@ -45,14 +46,23 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                 val sourceUrl = mediaSource.url
                 if (!sourceUrl.isNullOrEmpty()) {
                     smartSwitchExecutor = SmartSwitchExecutor()
-                    val sendRequestToYoubora: Future<Pair<String, String?>?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
-                    val responsePair = sendRequestToYoubora?.get() as Pair
-                    val isErrorResponse = responsePair.second
-                    val url = responsePair.first
-                    if (isErrorResponse == null) {
-                        mediaSource.url = url
-                    } else {
-                        errorMessage = isErrorResponse
+                    val sendRequestToYoubora: Future<Any?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
+                    val response = sendRequestToYoubora?.get()
+                    response?.let { res ->
+                        when (res) {
+                            is CDNList -> {
+                                mediaSource.url = res.url
+                                messageBus?.post(InterceptorEvent.CdnSwitchedEvent(
+                                    InterceptorEvent.Type.CDN_SWITCHED,
+                                    res.cdnCode))
+                            }
+                            is String -> {
+                                errorMessage = res
+                            }
+                            else -> {
+                                errorMessage = "Unknown error in SmartSwitch response."
+                            }
+                        }
                     }
                     smartSwitchExecutor?.terminateService()
                 } else {
