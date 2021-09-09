@@ -98,7 +98,6 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
 
     }
 
-    
     override fun onDestroy() {
         smartSwitchExecutor?.terminateService()
         messageBus?.removeListeners(this)
