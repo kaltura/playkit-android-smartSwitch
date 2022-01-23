@@ -1,8 +1,9 @@
 package com.kaltura.playkit.plugins.smartswitch
 
 import android.content.Context
+import android.webkit.URLUtil
 import com.kaltura.playkit.*
-import com.kaltura.playkit.plugins.smartswitch.pluginconfig.CDNList
+import com.kaltura.playkit.plugins.smartswitch.pluginconfig.Provider
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchConfig
 import com.kaltura.tvplayer.PKMediaEntryInterceptor
 import java.util.concurrent.Future
@@ -48,22 +49,30 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                     smartSwitchExecutor = SmartSwitchExecutor()
                     val sendRequestToYoubora: Future<Any?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
                     val response = sendRequestToYoubora?.get()
-                    response?.let { res ->
-                        when (res) {
-                            is CDNList -> {
-                                mediaSource.url = res.url
-                                messageBus?.post(InterceptorEvent.CdnSwitchedEvent(
-                                    InterceptorEvent.Type.CDN_SWITCHED,
-                                    res.cdnCode))
+                    if (response is String) {
+                        errorMessage = response
+                    } else if (response is ArrayList<*> && response.size > 0) {
+                        val selectedProivder = response.get(0)
+                        selectedProivder?.let { res ->
+                            when (res) {
+                                is Provider -> {
+                                    mediaSource.url = res.url
+                                    if (URLUtil.isValidUrl(mediaSource.url)) {
+                                        messageBus?.post(
+                                            InterceptorEvent.CdnSwitchedEvent(
+                                                InterceptorEvent.Type.CDN_SWITCHED,
+                                                res.provider
+                                            )
+                                        )
+                                    } else {
+                                        errorMessage = "Invalid SmartSwitch url = ${res.url}."
+                                    }
+                                }
+                                else -> {
+                                    errorMessage = "Unknown error in SmartSwitch response."
+                                }
                             }
-                            is String -> {
-                                errorMessage = res
-                            }
-                            else -> {
-                                errorMessage = "Unknown error in SmartSwitch response."
-                            }
-                        }
-                    }
+                        }}
                     smartSwitchExecutor?.terminateService()
                 } else {
                     errorMessage = "Invalid media source"
@@ -75,9 +84,9 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
 
         errorMessage?.let {
             messageBus?.post(SmartSwitchEvent.ErrorEvent(
-                    SmartSwitchEvent.Type.SMARTSWITCH_ERROR,
-                    errorCode,
-                    it))
+                SmartSwitchEvent.Type.SMARTSWITCH_ERROR,
+                errorCode,
+                it))
         }
         listener?.onComplete()
     }

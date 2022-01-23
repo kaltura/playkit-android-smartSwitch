@@ -10,9 +10,15 @@ import java.util.HashMap
  * @param accountCode Mandatory: YOUBORA account code
  * @param originCode Mandatory: CDN group configured to select a subset of configured CDNs
  * @param optionalParams Optional:
- *                          Ex. ip(String), extraData(Boolean), userAgent(String),
- *                          live(Boolean), nva(Not Valid After timestamp in UTC +1, Integer),
- *                          nvb(Not  Valid  Before  timestamp  in  UTC +1,Integer), token(String)
+ *                          Ex:
+ *                          ip(String),
+ *                          userAgent(String),
+ *                          live(Is live media ,"true"/"false"),
+ *                          nva(Not Valid After timestamp in UTC +1, Integer),
+ *                          nvb(Not Valid Before timestamp in UTC +1, Integer),
+ *                          secretKey:(API secret that can be configured from the UI, String)
+ *                          extended(will add score/UUID filed in response, "true"/"false")
+ *
  * @param smartSwitchUrl Optional: SmartSwitch server url
  *
  * @return SmartSwitchConfig
@@ -23,7 +29,7 @@ data class SmartSwitchConfig @JvmOverloads constructor(@NonNull val accountCode:
                                                        var smartSwitchUrl: String? = null) {
     init {
         if (smartSwitchUrl.isNullOrEmpty() || !URLUtil.isNetworkUrl(smartSwitchUrl)) {
-            smartSwitchUrl = "http://cdnbalancer.youbora.com/orderedcdn"
+            smartSwitchUrl= "https://api.gbnpaw.com/${accountCode}/decision"
         }
     }
 }

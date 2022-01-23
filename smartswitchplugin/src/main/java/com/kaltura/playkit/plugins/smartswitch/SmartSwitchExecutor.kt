@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.annotation.Nullable
 import com.google.gson.Gson
 import com.kaltura.playkit.PKLog
-import com.kaltura.playkit.plugins.smartswitch.pluginconfig.CDNList
+import com.kaltura.playkit.plugins.smartswitch.pluginconfig.Provider
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchErrorResponse
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchParser
 import java.io.BufferedReader
@@ -56,8 +56,9 @@ internal class SmartSwitchExecutor {
         private val accountCodeKey = "accountCode"
         private val resourceKey = "resource"
         private val originCodeKey = "originCode"
+
         private var errorMessage = "Invalid Response"
-        private var cdnList: CDNList? = null
+        private var providers: List<Provider>? = null
 
         override fun call(): Any {
             var connection: HttpURLConnection? = null
@@ -86,11 +87,12 @@ internal class SmartSwitchExecutor {
                     }
                     log.d("SmartSwitch Response: ${stringBuilder}")
                     val smartSwitchParser: SmartSwitchParser? = Gson().fromJson(stringBuilder.toString(), SmartSwitchParser::class.java)
-                    if (smartSwitchParser?.smartSwitch != null) {
-                        cdnList = parseSmartSwitchResponse(smartSwitchParser)
-                        if (cdnList != null) {
-                            log.d("Success response CDN_URL: ${cdnList!!.url} CDN_NAME: ${cdnList!!.cdnName}")
-                            log.d("Success response CDN_CODE: ${cdnList!!.cdnCode} CDN_SCORE: ${cdnList!!.cdnScore}")
+                    if (smartSwitchParser?.providers != null) {
+                        providers = smartSwitchParser.providers
+                        var providersSize = providers?.size ?: 0
+                        if (providers != null && providersSize > 0) {
+                            log.d("Success response CDN_URL: ${providers?.get(0)?.url} CDN_NAME: ${providers?.get(0)?.name}")
+                            log.d("Success response CDN_CODE: ${providers?.get(0)?.provider}")
                         } else {
                             errorMessage = "CDNList is empty"
                             return errorMessage
@@ -135,7 +137,7 @@ internal class SmartSwitchExecutor {
                 log.d("Connection resources have been cleaned.")
             }
 
-            return cdnList!!
+            return providers!!
         }
 
         /**
@@ -146,7 +148,6 @@ internal class SmartSwitchExecutor {
             builder.appendQueryParameter(accountCodeKey, accountCode)
             builder.appendQueryParameter(resourceKey, resourceUrl)
             builder.appendQueryParameter(originCodeKey, originCode)
-
             optionalParams?.let { it ->
                 if (it.isNotEmpty()) {
                     it.forEach { (queryKey, queryValue) ->
@@ -156,29 +157,7 @@ internal class SmartSwitchExecutor {
                     }
                 }
             }
-
             return builder.build()
-        }
-
-        /**
-         * Parse the SmartSwitch API response
-         */
-        private fun parseSmartSwitchResponse(smartSwitchParser: SmartSwitchParser?): CDNList? {
-            var listOfCdn: CDNList? = null
-            smartSwitchParser?.let { it ->
-                it.smartSwitch?.let { smartSwitch ->
-                    smartSwitch.CDNList?.let { cdnList ->
-                        if (!cdnList.isNullOrEmpty()) {
-                            cdnList[0].forEach { (_, value) ->
-                                value?.let {
-                                    listOfCdn = value
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return listOfCdn
         }
     }
 }
