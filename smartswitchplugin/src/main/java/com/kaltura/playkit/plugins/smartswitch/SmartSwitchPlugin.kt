@@ -59,9 +59,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                                         messageBus?.post(
                                             InterceptorEvent.CdnSwitchedEvent(
                                                 InterceptorEvent.Type.CDN_SWITCHED,
-                                                provider.provider
-                                            )
-                                        )
+                                                provider.provider))
                                     } else {
                                         errorMessage = "Invalid SmartSwitch url = ${provider.url}."
                                     }

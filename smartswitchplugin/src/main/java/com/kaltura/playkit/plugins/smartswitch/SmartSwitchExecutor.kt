@@ -79,7 +79,7 @@ internal class SmartSwitchExecutor {
                 if (connection.responseCode == successResponseCode) {
                     inputStream = connection.inputStream
                     var responseStringBuilder: StringBuilder = getResponseStringBuilder(inputStream)
-                    log.d("SmartSwitch Response: ${responseStringBuilder}")
+                    log.d("SmartSwitch Response: $responseStringBuilder")
                     val smartSwitchParser: SmartSwitchParser? = Gson().fromJson(responseStringBuilder.toString(), SmartSwitchParser::class.java)
                     if (smartSwitchParser?.providers != null) {
                         providers = smartSwitchParser.providers
@@ -141,6 +141,9 @@ internal class SmartSwitchExecutor {
             return providers!!
         }
 
+        /**
+         * Parse the input stream and build a response String
+         */
         private fun getResponseStringBuilder(inputStream: InputStream?): StringBuilder {
             val bufferedReader = BufferedReader(InputStreamReader(inputStream))
             val responseStringBuilder = StringBuilder()
