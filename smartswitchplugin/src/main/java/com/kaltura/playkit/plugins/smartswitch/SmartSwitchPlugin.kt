@@ -13,7 +13,6 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
     private var messageBus: MessageBus? = null
 
     private var accountCode: String? = null
-    private var originCode: String? = null
     private var optionalParams: HashMap<String, String>? = null
     private var smartSwitchUrl: String? = null
     private var smartSwitchExecutor: SmartSwitchExecutor? = null
@@ -25,7 +24,6 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
         }
 
         this.accountCode = config.accountCode
-        this.originCode = config.originCode
         this.optionalParams = config.optionalParams
         this.smartSwitchUrl = config.smartSwitchUrl
 
@@ -36,7 +34,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
         val errorCode = -1
         var errorMessage: String? = null
 
-        if (mediaEntry == null || accountCode.isNullOrEmpty() || originCode.isNullOrEmpty()) {
+        if (mediaEntry == null || accountCode.isNullOrEmpty()) {
             listener?.onComplete()
             return
         }
@@ -47,7 +45,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                 val sourceUrl = mediaSource.url
                 if (!sourceUrl.isNullOrEmpty()) {
                     smartSwitchExecutor = SmartSwitchExecutor()
-                    val sendRequestToYoubora: Future<Any?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, originCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
+                    val sendRequestToYoubora: Future<Any?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
                     val response = sendRequestToYoubora?.get()
                     if (response is String) {
                         errorMessage = response
@@ -72,7 +70,10 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                                     errorMessage = "Unknown error in SmartSwitch response."
                                 }
                             }
-                        }}
+                        }
+                    } else{
+                        errorMessage = "Empty providers SmartSwitch response."
+                    }
                     smartSwitchExecutor?.terminateService()
                 } else {
                     errorMessage = "Invalid media source"
