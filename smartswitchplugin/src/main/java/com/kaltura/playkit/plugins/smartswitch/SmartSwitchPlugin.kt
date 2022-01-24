@@ -71,7 +71,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                                 }
                             }
                         }
-                    } else{
+                    } else {
                         errorMessage = "Empty providers SmartSwitch response."
                     }
                     smartSwitchExecutor?.terminateService()
