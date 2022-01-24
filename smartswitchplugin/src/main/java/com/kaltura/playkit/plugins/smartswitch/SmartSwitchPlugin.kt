@@ -52,20 +52,20 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                     if (response is String) {
                         errorMessage = response
                     } else if (response is ArrayList<*> && response.size > 0) {
-                        val selectedProivder = response.get(0)
-                        selectedProivder?.let { res ->
-                            when (res) {
+                        val selectedProvider = response[0]
+                        selectedProvider?.let { provider ->
+                            when (provider) {
                                 is Provider -> {
-                                    mediaSource.url = res.url
+                                    mediaSource.url = provider.url
                                     if (URLUtil.isValidUrl(mediaSource.url)) {
                                         messageBus?.post(
                                             InterceptorEvent.CdnSwitchedEvent(
                                                 InterceptorEvent.Type.CDN_SWITCHED,
-                                                res.provider
+                                                provider.provider
                                             )
                                         )
                                     } else {
-                                        errorMessage = "Invalid SmartSwitch url = ${res.url}."
+                                        errorMessage = "Invalid SmartSwitch url = ${provider.url}."
                                     }
                                 }
                                 else -> {
