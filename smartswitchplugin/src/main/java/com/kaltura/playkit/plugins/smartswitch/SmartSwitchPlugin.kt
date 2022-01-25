@@ -35,6 +35,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
         var errorMessage: String? = null
 
         if (mediaEntry == null || accountCode.isNullOrEmpty()) {
+            log.e("SmartSwitch accountCode config is missing")
             listener?.onComplete()
             return
         }
@@ -45,7 +46,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
                 val sourceUrl = mediaSource.url
                 if (!sourceUrl.isNullOrEmpty()) {
                     smartSwitchExecutor = SmartSwitchExecutor()
-                    val sendRequestToYoubora: Future<Any?>? = smartSwitchExecutor?.sendRequestToYoubora(accountCode!!, sourceUrl, optionalParams, smartSwitchUrl!!)
+                    val sendRequestToYoubora: Future<Any?>? = smartSwitchExecutor?.sendRequestToYoubora(smartSwitchUrl!!, sourceUrl, optionalParams)
                     val response = sendRequestToYoubora?.get()
                     if (response is String) {
                         errorMessage = response

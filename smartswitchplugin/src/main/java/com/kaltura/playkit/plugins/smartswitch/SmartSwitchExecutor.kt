@@ -24,11 +24,10 @@ internal class SmartSwitchExecutor {
     private val smartSwitchExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     @Nullable
-    fun sendRequestToYoubora(accountCode: String,
+    fun sendRequestToYoubora(@Nullable smartSwitchUrl: String,
                              resourceUrl: String?,
-                             @Nullable optionalParams: HashMap<String, String>?,
-                             @Nullable smartSwitchUrl: String): Future<Any?>? {
-        val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, accountCode, resourceUrl, optionalParams)
+                             @Nullable optionalParams: HashMap<String, String>?): Future<Any?>? {
+        val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, resourceUrl, optionalParams)
         return smartSwitchExecutor.submit(sendConfigToYoubora)
     }
 
@@ -42,7 +41,6 @@ internal class SmartSwitchExecutor {
      * Sends the callback as well
      */
     private class SendConfigToYoubora(val smartSwitchServerUrl: String,
-                                      val accountCode: String,
                                       var resourceUrl: String?,
                                       val optionalParams: HashMap<String, String>?): Callable<Any?> {
 
