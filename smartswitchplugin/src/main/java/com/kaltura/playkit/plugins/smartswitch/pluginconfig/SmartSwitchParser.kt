@@ -5,31 +5,26 @@ import com.google.gson.annotations.SerializedName
 
 class SmartSwitchParser {
     @Nullable
-    var smartSwitch: SmartSwitch? = null
-}
-
-class SmartSwitch {
+    var providers: ArrayList<Provider>? = null
     @Nullable
-    var switchingMethod: String? = null
-    @Nullable
-    var CDNList: ArrayList<Map<String?, CDNList?>>? = null
+    var cdnBalanceMethod: String? = null
     @Nullable
     var UUID: String? = null
 }
 
-class CDNList {
+class Provider {
     @Nullable
-    @SerializedName("CDN_NAME")
-    var cdnName: String? = null
+    @SerializedName("provider")
+    var provider: String? = null
     @Nullable
-    @SerializedName("CDN_CODE")
-    var cdnCode: String? = null
+    @SerializedName("name")
+    var name: String? = null
     @Nullable
-    @SerializedName("URL")
+    @SerializedName("url")
     var url: String? = null
     @Nullable
-    @SerializedName("CDN_SCORE")
-    var cdnScore: Float? = null
+    @SerializedName("score")
+    var score: Float? = null
 }
 
 class SmartSwitchErrorResponse {

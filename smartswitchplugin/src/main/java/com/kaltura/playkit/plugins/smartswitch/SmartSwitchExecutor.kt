@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.annotation.Nullable
 import com.google.gson.Gson
 import com.kaltura.playkit.PKLog
-import com.kaltura.playkit.plugins.smartswitch.pluginconfig.CDNList
+import com.kaltura.playkit.plugins.smartswitch.pluginconfig.Provider
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchErrorResponse
 import com.kaltura.playkit.plugins.smartswitch.pluginconfig.SmartSwitchParser
 import java.io.BufferedReader
@@ -24,11 +24,10 @@ internal class SmartSwitchExecutor {
     private val smartSwitchExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     @Nullable
-    fun sendRequestToYoubora(accountCode: String, originCode: String,
+    fun sendRequestToYoubora(@Nullable smartSwitchUrl: String,
                              resourceUrl: String?,
-                             @Nullable optionalParams: HashMap<String, String>?,
-                             @Nullable smartSwitchUrl: String): Future<Any?>? {
-        val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, accountCode, originCode, resourceUrl, optionalParams)
+                             @Nullable optionalParams: HashMap<String, String>?): Future<Any?>? {
+        val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, resourceUrl, optionalParams)
         return smartSwitchExecutor.submit(sendConfigToYoubora)
     }
 
@@ -42,8 +41,6 @@ internal class SmartSwitchExecutor {
      * Sends the callback as well
      */
     private class SendConfigToYoubora(val smartSwitchServerUrl: String,
-                                      val accountCode: String,
-                                      val originCode: String,
                                       var resourceUrl: String?,
                                       val optionalParams: HashMap<String, String>?): Callable<Any?> {
 
@@ -52,12 +49,13 @@ internal class SmartSwitchExecutor {
         private val connectionReadTimeOut: Int = 10000
         private val connectionTimeOut: Int = 10000
         private val successResponseCode: Int = 200
+        private val methodNotFoundErrorResponseCode: Int = 400
+        private val internalServerErrorResponseCode: Int = 500
         private val requestMethod: String = "GET"
-        private val accountCodeKey = "accountCode"
         private val resourceKey = "resource"
-        private val originCodeKey = "originCode"
+
         private var errorMessage = "Invalid Response"
-        private var cdnList: CDNList? = null
+        private var providers: List<Provider>? = null
 
         override fun call(): Any {
             var connection: HttpURLConnection? = null
@@ -78,38 +76,39 @@ internal class SmartSwitchExecutor {
 
                 if (connection.responseCode == successResponseCode) {
                     inputStream = connection.inputStream
-                    bufferedReader = BufferedReader(InputStreamReader(inputStream))
-                    val stringBuilder = StringBuilder()
-                    var incomingData: String?
-                    while (bufferedReader.readLine().also { incomingData = it } != null) {
-                        stringBuilder.append(incomingData)
-                    }
-                    log.d("SmartSwitch Response: ${stringBuilder}")
-                    val smartSwitchParser: SmartSwitchParser? = Gson().fromJson(stringBuilder.toString(), SmartSwitchParser::class.java)
-                    if (smartSwitchParser?.smartSwitch != null) {
-                        cdnList = parseSmartSwitchResponse(smartSwitchParser)
-                        if (cdnList != null) {
-                            log.d("Success response CDN_URL: ${cdnList!!.url} CDN_NAME: ${cdnList!!.cdnName}")
-                            log.d("Success response CDN_CODE: ${cdnList!!.cdnCode} CDN_SCORE: ${cdnList!!.cdnScore}")
+                    var responseStringBuilder: StringBuilder = getResponseStringBuilder(inputStream)
+                    log.d("SmartSwitch Response: $responseStringBuilder")
+                    val smartSwitchParser: SmartSwitchParser? = Gson().fromJson(responseStringBuilder.toString(), SmartSwitchParser::class.java)
+                    if (smartSwitchParser?.providers != null) {
+                        providers = smartSwitchParser.providers
+                        var providersSize = providers?.size ?: 0
+                        if (providers != null && providersSize > 0) {
+                            log.d("Success response CDN_URL: ${providers?.get(0)?.url} CDN_NAME: ${providers?.get(0)?.name}")
+                            log.d("Success response CDN_CODE: ${providers?.get(0)?.provider}")
                         } else {
-                            errorMessage = "CDNList is empty"
+                            errorMessage = "Error, providers list is empty"
                             return errorMessage
                         }
                     } else {
-                        val smartSwitchError: SmartSwitchErrorResponse? = Gson().fromJson(stringBuilder.toString(), SmartSwitchErrorResponse::class.java)
-                        smartSwitchError?.let {
-                            it.messages?.size?.let { messageSize ->
-                                if (messageSize > 0) {
-                                    it.messages?.get(0)?.message?.let { message ->
-                                        if (message.isNotEmpty()) {
-                                            errorMessage = message
-                                        }
+                        errorMessage = "Error, Invalid Response"
+                        return errorMessage
+                    }
+                } else if (connection.responseCode == methodNotFoundErrorResponseCode || connection.responseCode == internalServerErrorResponseCode) {
+                    inputStream = connection.errorStream
+                    var responseStringBuilder: StringBuilder = getResponseStringBuilder(inputStream)
+                    val smartSwitchError: SmartSwitchErrorResponse? = Gson().fromJson(responseStringBuilder.toString(), SmartSwitchErrorResponse::class.java)
+                    smartSwitchError?.let {
+                        it.messages?.size?.let { messageSize ->
+                            if (messageSize > 0) {
+                                it.messages?.get(0)?.message?.let { message ->
+                                    if (message.isNotEmpty()) {
+                                        errorMessage = message
                                     }
                                 }
                             }
                         }
-                        return errorMessage
                     }
+                    return errorMessage
                 } else {
                     errorMessage = connection.responseMessage
                     log.e("connection.responseMessage: $errorMessage")
@@ -134,8 +133,23 @@ internal class SmartSwitchExecutor {
                 connection?.disconnect()
                 log.d("Connection resources have been cleaned.")
             }
+            if (providers == null){
+                providers = ArrayList()
+            }
+            return providers!!
+        }
 
-            return cdnList!!
+        /**
+         * Parse the input stream and build a response String
+         */
+        private fun getResponseStringBuilder(inputStream: InputStream?): StringBuilder {
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+            val responseStringBuilder = StringBuilder()
+            var incomingData: String?
+            while (bufferedReader.readLine().also { incomingData = it } != null) {
+                responseStringBuilder.append(incomingData)
+            }
+            return responseStringBuilder
         }
 
         /**
@@ -143,10 +157,7 @@ internal class SmartSwitchExecutor {
          */
         private fun appendQueryParams(uri: Uri): Uri {
             val builder: Uri.Builder = uri.buildUpon()
-            builder.appendQueryParameter(accountCodeKey, accountCode)
             builder.appendQueryParameter(resourceKey, resourceUrl)
-            builder.appendQueryParameter(originCodeKey, originCode)
-
             optionalParams?.let { it ->
                 if (it.isNotEmpty()) {
                     it.forEach { (queryKey, queryValue) ->
@@ -156,29 +167,7 @@ internal class SmartSwitchExecutor {
                     }
                 }
             }
-
             return builder.build()
-        }
-
-        /**
-         * Parse the SmartSwitch API response
-         */
-        private fun parseSmartSwitchResponse(smartSwitchParser: SmartSwitchParser?): CDNList? {
-            var listOfCdn: CDNList? = null
-            smartSwitchParser?.let { it ->
-                it.smartSwitch?.let { smartSwitch ->
-                    smartSwitch.CDNList?.let { cdnList ->
-                        if (!cdnList.isNullOrEmpty()) {
-                            cdnList[0].forEach { (_, value) ->
-                                value?.let {
-                                    listOfCdn = value
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return listOfCdn
         }
     }
 }
