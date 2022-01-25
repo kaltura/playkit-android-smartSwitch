@@ -32,7 +32,7 @@ data class SmartSwitchConfig @JvmOverloads constructor(@NonNull val accountCode:
                                                        var smartSwitchUrl: String? = null) {
     init {
         if (smartSwitchUrl.isNullOrEmpty() || !URLUtil.isNetworkUrl(smartSwitchUrl)) {
-            smartSwitchUrl= "https://api.gbnpaw.com/${accountCode}/${application}/decision"
+            smartSwitchUrl = "https://api.gbnpaw.com/${accountCode}/${application}/decision"
         }
     }
 }
