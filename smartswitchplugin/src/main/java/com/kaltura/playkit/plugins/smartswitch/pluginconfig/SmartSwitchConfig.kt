@@ -32,11 +32,11 @@ data class SmartSwitchConfig @JvmOverloads constructor(@NonNull val accountCode:
                                                        @NonNull val application: String? = "default",
                                                        var domainUrl: String? = null) {
     init {
-        var apiPathParams = "${accountCode}/${application}/decision"
-        if (domainUrl.isNullOrEmpty() || !URLUtil.isValidUrl(domainUrl)) {
-            domainUrl = "https://api.gbnpaw.com/$apiPathParams"
+        val apiPathParams = "${accountCode}/${application}/decision"
+        domainUrl = if (domainUrl.isNullOrEmpty() || !URLUtil.isValidUrl(domainUrl)) {
+            "https://api.gbnpaw.com/$apiPathParams"
         } else {
-            domainUrl = "$domainUrl/$apiPathParams"
+            "$domainUrl/$apiPathParams"
         }
     }
 }
