@@ -25,7 +25,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
 
         this.accountCode = config.accountCode
         this.optionalParams = config.optionalParams
-        this.smartSwitchUrl = config.smartSwitchUrl
+        this.smartSwitchUrl = config.domainUrl
 
         this.messageBus = messageBus
     }
