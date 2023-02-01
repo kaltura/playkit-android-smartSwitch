@@ -38,7 +38,7 @@ set_version() {
     # Changing the version in build.gradle file
     if [[ "$RELEASE_TYPE" == "Patch" || "$RELEASE_TYPE" == "Update" ]]; then
        echo "RELEASE_TYPE = '$RELEASE_TYPE'"
-       perl -pi -e "s/player:tvplayer:$PLAYKIT_PREV_VERSION/player:tvplayer:$NEW_VERSION/" $BUILD_GRADLE
+       perl -pi -e "s/player:tvplayer:$PREV_VERSION/player:tvplayer:$NEW_VERSION/" $BUILD_GRADLE
     fi
 
     if [ "$RELEASE_TYPE" == "Full" ]; then
