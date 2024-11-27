@@ -43,7 +43,7 @@ set_version() {
 
     if [ "$RELEASE_TYPE" == "Full" ]; then
        echo "RELEASE_TYPE = '$RELEASE_TYPE'"
-       perl -pi -e "s/:kaltura-player-android:develop-SNAPSHOT/.player:tvplayer:$NEW_VERSION/" $BUILD_GRADLE
+       perl -pi -e "s/:kaltura-player-android:.*?-SNAPSHOT/.player:tvplayer:$NEW_VERSION/" $BUILD_GRADLE
     fi
 }
 
