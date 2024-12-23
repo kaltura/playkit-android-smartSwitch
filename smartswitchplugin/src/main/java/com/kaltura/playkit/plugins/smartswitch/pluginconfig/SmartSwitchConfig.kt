@@ -27,9 +27,9 @@ import java.util.HashMap
  *
  * @return SmartSwitchConfig
  */
-data class SmartSwitchConfig @JvmOverloads constructor(@NonNull val accountCode: String? = null,
+data class SmartSwitchConfig @JvmOverloads constructor(val accountCode: String? = null,
                                                        val optionalParams: HashMap<String, String>? = null,
-                                                       @NonNull val application: String? = "default",
+                                                       val application: String? = "default",
                                                        var domainUrl: String? = null) {
     init {
         val apiPathParams = "${accountCode}/${application}/decision"

@@ -3,15 +3,16 @@ apply plugin: 'kotlin-android'
 apply from: 'version.gradle'
 
 android {
-    compileSdkVersion 33
+    namespace 'com.kaltura.playkit.plugin.smartswitch'
+    compileSdk 34
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     defaultConfig {
-        minSdkVersion 17
-        targetSdkVersion 33
+        minSdkVersion 21
+        targetSdkVersion 34
         versionCode 1
         versionName libVersion
 
@@ -25,16 +26,24 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
+    buildFeatures {
+        buildConfig true
+    }
+    publishing {
+        publishing {
+            singleVariant('release') {
+            }
+        }
+    }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 }
 
 dependencies {
 
     //TODO change to latest playkit version after tagging.
-    implementation 'com.kaltura:kaltura-player-android:develop-SNAPSHOT'
+    implementation 'com.kaltura:kaltura-player-android:KUX-1761-SNAPSHOT'
     //implementation project(':tvplayer')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

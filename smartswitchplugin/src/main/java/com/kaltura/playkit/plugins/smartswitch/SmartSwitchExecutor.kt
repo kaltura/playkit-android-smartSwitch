@@ -24,7 +24,7 @@ internal class SmartSwitchExecutor {
     private val smartSwitchExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     @Nullable
-    fun sendRequestToYoubora(@Nullable smartSwitchUrl: String,
+    fun sendRequestToYoubora(smartSwitchUrl: String,
                              resourceUrl: String?,
                              @Nullable optionalParams: HashMap<String, String>?): Future<Any?>? {
         val sendConfigToYoubora = SendConfigToYoubora(smartSwitchUrl, resourceUrl, optionalParams)
