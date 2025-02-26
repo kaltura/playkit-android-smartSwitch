@@ -1,5 +1,6 @@
 package com.kaltura.playkit.plugins.smartswitch
 
+import android.app.Activity
 import android.content.Context
 import android.webkit.URLUtil
 import com.kaltura.playkit.*
@@ -17,7 +18,7 @@ class SmartSwitchPlugin: PKPlugin(), PKMediaEntryInterceptor {
     private var smartSwitchUrl: String? = null
     private var smartSwitchExecutor: SmartSwitchExecutor? = null
 
-    override fun onLoad(player: Player?, config: Any?, messageBus: MessageBus?, context: Context?) {
+    override fun onLoad(player: Player?, config: Any?, messageBus: MessageBus?, context: Context?, playerActivity: Activity?) {
         if (config == null || config !is SmartSwitchConfig) {
             log.e("SmartSwitch config is missing")
             return
