@@ -43,7 +43,7 @@ android {
 dependencies {
 
     //TODO change to latest playkit version after tagging.
-    implementation 'com.kaltura:kaltura-player-android:PLAYEROTT-56-SNAPSHOT'
+    implementation 'com.kaltura.player:tvplayer:5.0.2-rc3-simid'
     //implementation project(':tvplayer')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
